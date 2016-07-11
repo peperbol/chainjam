@@ -28,6 +28,7 @@ var Player3 = 2;
 var Player4 = 3;
 var _unity; // a possible unity game
 var _localStorageAvailable = (typeof(Storage)!=="undefined");
+var Module = {}; //Unity config object
 
 function utf8_to_b64(str) {
     var result = window.btoa(unescape(encodeURIComponent(str)));
@@ -45,7 +46,7 @@ function SetGameActive(game, state)
     if (_localStorageAvailable) {
 	    localStorage.setItem(utf8_to_b64(game.path), state);
     }
-	
+
 	var currentItem = _games;
 	while (currentItem) {
 		if (currentItem.path == game.path) {
@@ -69,26 +70,28 @@ function makeLinkedGamesList()
 		currentItem.next.chosen = true;
 		currentItem = currentItem.next;
 	}
-	
+ console.log(_g);
 	_games = linkedGamesList;
 }
 
 // returns a non-linked copy of the linked list (so one can do destructive operations on it)
 function gamesCopy()
 {
-    var gameCounter = 0;		
+    var gameCounter = 0;
 
 	// move to the first chosen item in the list
 	var currentItem = _games;
+
 	while (currentItem != null && !currentItem.chosen) currentItem = currentItem.next;
-	
+
+  // TODO, validate if there are any chosen games;
 	// make a copy of the first chosen item
 	var copy = new Object();
 	copy.first = gameCopy(currentItem);
 	if (copy.first) {
 		gameCounter++;
 	}
-	
+
 	var currentItemCopy = copy.first;
 	while (currentItem.next)
 	{
@@ -148,20 +151,20 @@ function CompileGamesList(amount)
 {
 	if (_gameRunning) return; // security
 	_selectedGamesAmount = amount;
-	
+
 	// lets get a nice copy of the games list
 	var totalList = new Object();
 	totalList = gamesCopy();
-	
+
 	// in case there are not enough games, adjust the amount
 	if (amount > totalList.length) {
 		amount = totalList.length;
 	}
-	
-	
+
+
 	var selection = cutListItem(totalList, Math.floor((Math.random()*totalList.length)));
 	var currentItem = selection;
-	
+
 	for (var i = 1; i < amount; i++)
 	{
 		currentItem.next = cutListItem(totalList, Math.floor((Math.random()*totalList.length)));
@@ -177,7 +180,7 @@ function AddGamesToProgressDisplay()
 {
 	var widthList = $("#sideBarRight").width();
 	var heightList = $("#sideBarRight").height();
-	
+
 	// count number of selected games
 	var gameCount = 1;
 	var currentItem = _selectedGames;
@@ -186,7 +189,7 @@ function AddGamesToProgressDisplay()
 		gameCount++;
 		currentItem = currentItem.next;
 	}
-	
+
 	// calculate size for game cubes
 	var widthGameCube = _gameCubeMaxSize;
 	var problemSolved = false;
@@ -198,7 +201,7 @@ function AddGamesToProgressDisplay()
 		problemSolved = (heightList / widthGameCube) * columnCount > gameCount;
 	}
 	widthGameCube--;
-	
+
 	// add game cubes to the progress display
 	$("#sideBarRight").empty();
 	var currentItem = _selectedGames;
@@ -207,10 +210,10 @@ function AddGamesToProgressDisplay()
 		$("#sideBarRight").append('<div class="gameCube" id="game' + utf8_to_b64(currentItem.path) + '"></div>');
 		currentItem = currentItem.next;
 	}
-	
+
 	// assign css attributes
 	$(".gameCube").css("width", widthGameCube - 6).css("height", widthGameCube - 6);
-	
+
 }
 
 // colors a game cube according to who has won
@@ -235,7 +238,7 @@ function ColorGameCube()
 		&& _currentGame.score[Player4] > _currentGame.score[Player3]) {
 		gameCube.addClass("gameCubePlayer4");
 	}
-	
+
 }
 
 // marks a game cube active
@@ -243,7 +246,7 @@ function ColorGameCubeActive()
 {
     var gameCube = $("#game" + utf8_to_b64(_currentGame.path));
 	gameCube.addClass("gameCubeActive");
-		
+
 }
 
 // marks a game cube damaged
@@ -251,7 +254,7 @@ function ColorGameCubeDamaged()
 {
     var gameCube = $("#game" + utf8_to_b64(_currentGame.path));
 	gameCube.addClass("gameCubeDamaged");
-		
+
 }
 
 // returns a game at a given position (destructive: removes it also from the list -> to make sure no game ends up twice in the new list)
@@ -269,7 +272,7 @@ function cutListItem(list, position)
 		previousItem.next = item.next;
 		list.length--;
 	}
-	
+
 	return item;
 }
 
@@ -278,8 +281,8 @@ function StartGames()
 {
 	if (_gameRunning) return; // security
 	_totalPlayerScore[Player1] = 0; _totalPlayerScore[Player2] = 0; _totalPlayerScore[Player3] = 0; _totalPlayerScore[Player4] = 0; // reset total score
-	
-	
+
+
 	ShowCountdownToGame();
 }
 
@@ -296,7 +299,7 @@ function PlayerPoints(player, amount)
 		document.getElementById("currentScorePlayer" + (player + 1)).innerHTML = _currentGame.score[player];
 	}
 }
- 
+
 function ShowScoreboard() // will show the score board
 {
 	if (_gameRunning) return; // security
@@ -308,45 +311,45 @@ function OptimizeDimensions() // will resize everything so it will fit nicely in
 {
 	var screenWidth = $(window).width();
 	var screenHeight = $(window).height();
-	
+
 	// recalculate content dimensions
 	_contentHeight = (screenHeight / 4) * 3;
 	_contentWidth = _contentRatio * _contentHeight;
-	
+
 	// set new dimensions
     $("#content").css("width", _contentWidth).css("height", _contentHeight);
     $("#unityPlayer").css("width", _contentWidth).css("height", _contentHeight);
-	
+
 	if (_contentWidth + 100 < screenWidth)
 	{
-			
+
 		var sideBarWidth = (screenWidth - _contentWidth) / 2;
 		$("#content").css("left", sideBarWidth);
 		$("#sideBarLeft").css("width", sideBarWidth).css("height", screenHeight)
 		    .css("top", 0).css("left", 0);
 		$("#sideBarRight").css("width", sideBarWidth).css("height", screenHeight)
 		    .css("top", 0).css("left", _contentWidth + sideBarWidth);
-		
+
 		$("#score").css("height", screenHeight/4).css("width", _contentWidth)
 		    .css("top", _contentHeight).css("left", sideBarWidth);
 		$(".scoreBox").css("width", _contentWidth / 4.1);
 	}
 	else
 	{
-	
-		var gapSize = (screenWidth - _contentWidth) / 2;	
+
+		var gapSize = (screenWidth - _contentWidth) / 2;
 		var sideBarWidth = (screenHeight / 4);
 		$("#content").css("left", gapSize);
 		$("#sideBarLeft").css("width", sideBarWidth).css("height", sideBarWidth)
 		    .css("top", _contentHeight).css("left", gapSize);
 		$("#sideBarRight").css("width", sideBarWidth).css("height", sideBarWidth)
 		    .css("top", _contentHeight).css("left", _contentWidth - sideBarWidth + gapSize);
-		
+
 		$("#score").css("height", screenHeight/4).css("width", _contentWidth - 2 * sideBarWidth)
 		    .css("top", _contentHeight).css("left", sideBarWidth + gapSize);
 		$(".scoreBox").css("width", (_contentWidth - 2 * sideBarWidth) / 4.2);
 	}
-	
+
 	// resize possible existing game content frames / embeds
 	var html5Frame = $("#html5PlayeriFrame");
 	var flashFrame = $("#flashPlayerEmbed");
@@ -363,8 +366,8 @@ function OptimizeDimensions() // will resize everything so it will fit nicely in
 		unityFrame.css("width", _contentWidth).css("height", _contentHeight);
 		unityFrameOuter.css("width", _contentWidth).css("height", _contentHeight);
 	}
-	
-	
+
+
 }
 
 function PrepareNextGame()
@@ -378,8 +381,8 @@ function PrepareNextGame()
 function LoadNextGame() // will load the next game in the list
 {
 	if (_gameRunning) return; // security
-	
-	
+
+
 	if (_currentGame == null)
 	{
 		ShowScoreboard();
@@ -394,7 +397,7 @@ function LoadGame(game, useTimers)
 {
 	if (_gameRunning) return; // security
     _gameStartReceived = false;
-	
+
 	// initialize score
 	game.score = new Array();
 	game.score[0] = 0; // score player 1
@@ -406,10 +409,14 @@ function LoadGame(game, useTimers)
 	document.getElementById("currentScorePlayer2").innerHTML = 0;
 	document.getElementById("currentScorePlayer3").innerHTML = 0;
 	document.getElementById("currentScorePlayer4").innerHTML = 0;
-	
+
 	// load according to type
 	switch (game.type)
 	{
+		case "webGL":
+    case "unityWebGL":
+    	LoadUnityWebGLGame(_gamesDirectory + "/" + game.path);
+		break;
 		case "unity":
 			LoadUnityGame(_gamesDirectory + "/" + game.path);
 		break;
@@ -425,17 +432,17 @@ function LoadGame(game, useTimers)
 			LoadJavaGame(_gamesDirectory + "/" + game.path);
 		break;
 	}
-	
+
 	if (useTimers)
 	{
 		// timeout for game to respond
 		clearTimeout(_timeToRespondTimer);
 		_timeToRespondTimer = window.setTimeout("GameDoesNotRespond()", _timeToRespond * 1000);
 	}
-	
+
 	// now the game is running
 	_gameRunning = true;
-	
+
 }
 
 // game did not respond within given time
@@ -460,8 +467,8 @@ function GameReachedMaximumTime()
 // prepares the next game
 function ShowCountdownToGame()
 {
-	window.clearInterval(_gameTimeCountdownTimer);	
-		
+	window.clearInterval(_gameTimeCountdownTimer);
+
     // reset counter display
     document.getElementById("currentScorePlayer1").innerHTML = 0;
 	document.getElementById("currentScorePlayer2").innerHTML = 0;
@@ -475,7 +482,7 @@ function ShowCountdownToGame()
 	} else {
 		ShowScoreboard();
 	}
-    
+
 }
 
 // will try any tricks known to mankind to make the browser
@@ -486,6 +493,7 @@ function TryPreloadGame(game)
 	var idPrefetch = "prefetchGame";
 	$("#" + idPrerender).remove();
 	$("#" + idPrefetch).remove();
+  if(game.type == "webGL") return;
 	$("head").append('<link rel="prefetch" id="' + idPrefetch + '" href="' + _gamesDirectory + "/" + game.path + '">');
 	$("head").append('<link rel="prerender" id="' + idPrerender + '" href="' + _gamesDirectory + "/" + game.path + '">');
 }
@@ -494,14 +502,14 @@ function TryPreloadGame(game)
 function LoadHTML5Game(path)
 {
 	if (_gameRunning) return; // security
-	
+
 	// hide / show elements
 	$("#html5Player").show().empty();
 	$("#unityPlayer").hide().empty();
 	$("#flashPlayer").hide().empty();
 	$("#javaPlayer").hide().empty();
-	
-	$("#html5Player").append('<iframe id="html5PlayeriFrame" src="' + path + '" width=' + _contentWidth + ' height=' + _contentHeight + ' seamless="true" sandbox="allow-scripts allow-same-origin allow-top-navigation"></iframe>');
+
+	$("#html5Player").append('<iframe id="html5PlayeriFrame" src="' + path + '" width=' + _contentWidth + ' height=' + _contentHeight + ' seamless="true" sandbox="allow-scripts allow-same-origin allow-top-navigation allow-modals"></iframe>');
 	setTimeout(LoadHTML5GameSetFocus, 100);
 }
 
@@ -518,13 +526,13 @@ function LoadHTML5GameSetFocus()
 function LoadFlashGame(path)
 {
 	if (_gameRunning) return; // security
-	
+
 	// hide / show elements
 	$("#html5Player").hide().empty();
 	$("#unityPlayer").hide().empty();
 	$("#flashPlayer").show().empty();
 	$("#javaPlayer").hide().empty();
-	
+
 	$("#flashPlayer")
 		.append('<embed id="flashPlayerEmbed" src="' + path
 				+ '" height=' + _contentHeight
@@ -547,13 +555,13 @@ function LoadFlashGameSetFlashFocus()
 function LoadJavaGame(path)
 {
 	if (_gameRunning) return; // security
-	
+
 	// hide / show elements
 	$("#html5Player").hide().empty();
 	$("#unityPlayer").hide().empty();
 	$("#flashPlayer").hide().empty();
 	$("#javaPlayer").show().empty();
-	
+
 	$("#javaPlayer").append('<object id="javaObject" type="application/x-java-applet" height=' + _contentHeight + ' width=' + _contentWidth + '>'
 							+ '<param name="code" value="ChainJam" />'
 							+ '<param name="archive" value="' + path + '" />'
@@ -561,22 +569,38 @@ function LoadJavaGame(path)
 							+ '</object>');
 }
 
+function LoadUnityWebGLGame(path)
+{
+	if (_gameRunning) return; // security
+  var name = path.split("/");
+  name = name[name.length -1];
+  Module = {
+    TOTAL_MEMORY: 268435456,
+    errorhandler: null,			// arguments: err, url, line. This function must return 'true' if the error is handled, otherwise 'false'
+    compatibilitycheck: null,
+    dataUrl: path + "/Release/" +name+ ".data",
+    codeUrl: path + "/Release/"+name+".js",
+    memUrl: path +"/Release/"+name+".mem",
+  };
+  LoadHTML5Game("unityframe.html");
+}
+
 // will load a Unity3D game
 function LoadUnityGame(path)
 {
 	if (_gameRunning) return; // security
-	
+
 	// hide / show elements
 	$("#html5Player").hide().empty();
 	$("#unityPlayer").show().empty();
 	$("#flashPlayer").hide().empty();
 	$("#javaPlayer").hide().empty();
-	
+
 	var config = {
-		width: _contentWidth, 
+		width: _contentWidth,
 		height: _contentHeight,
 		params: { enableDebugging:"0" }
-		
+
 	};
 	_unity = new UnityObject2(config);
 
@@ -586,7 +610,7 @@ function LoadUnityGame(path)
 		var $brokenScreen = jQuery("#unityPlayer").find(".broken");
 		$missingScreen.hide();
 		$brokenScreen.hide();
-		
+
 		_unity.observeProgress(function (progress) {
 			switch(progress.pluginStatus) {
 				case "broken":
@@ -632,7 +656,7 @@ function CountDownGameTime() {
 	{
 		$("#gameTimeCountdown").text("");
 	}
-	
+
 	if (_gameTimeCoundown > 9)
 	{
 		$("#gameTimeCountdown").css("font-size", "3vh");
@@ -642,7 +666,3 @@ function CountDownGameTime() {
 		$("#gameTimeCountdown").css("font-size", (10 - _gameTimeCoundown + 3) + "vh");
 	}
 }
-
-
-
-

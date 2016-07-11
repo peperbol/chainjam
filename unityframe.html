@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="TemplateData/UnityProgress.js"></script>
+  </head>
+  <body >
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" ></canvas>
+    <script type='text/javascript'>
+
+    //full Iframe playing
+    (function(){
+      var canvas = document.getElementById('canvas');
+
+      // resize the canvas to fill browser window dynamically
+      window.addEventListener('resize', resizeCanvas, false);
+
+      function resizeCanvas() {
+              canvas.width = window.innerWidth;
+              canvas.height = window.innerHeight;
+      }
+
+      resizeCanvas();
+    })();
+
+  <!--
+  /*
+   * functions to be called from any unity player
+   * they will all be forwarded to the Parent window.
+   */
+  function GameStart() // will tell the framework that the game has begun
+  {
+    window.parent.GameStart();
+  }
+
+  function GameEnd() // will tell the framework that the game has ended
+  {
+    window.parent.GameEnd();
+  }
+
+  function Report()
+  {
+    window.parent.Report();
+  }
+
+  function PlayerOnePoints(amount) // will add <amount> points to the current game for player 1
+  {
+    window.parent.PlayerOnePoints(amount);
+  }
+
+  function PlayerTwoPoints(amount) // will add <amount> points to the current game for player 2
+  {
+    window.parent.PlayerTwoPoints(amount);
+  }
+
+  function PlayerThreePoints(amount) // will add <amount> points to the current game for player 3
+  {
+    window.parent.PlayerThreePoints(amount);
+  }
+
+  function PlayerFourPoints(amount) // will add <amount> points to the current game for player 4
+  {
+    window.parent.PlayerFourPoints(amount);
+  }
+
+  /*
+   * can be called from a minigame-unity player to stop a game and go back to the main menu
+   */
+  function ShowMenu() // will show the game menu
+  {
+    window.parent.ShowMenu();
+  }
+
+
+
+  var Module = window.parent.Module;
+</script>
+<script src="UnityLoader.js"></script>
+
+  </body>
+</html>
