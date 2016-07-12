@@ -575,7 +575,7 @@ function LoadUnityWebGLGame(path)
   var name = path.split("/");
   name = name[name.length -1];
   Module = {
-    TOTAL_MEMORY: 2147483648,
+    TOTAL_MEMORY: 268435456,
     errorhandler: function (err, url, line){
       console.error(err+"\n"+line);
       GameEnd();
